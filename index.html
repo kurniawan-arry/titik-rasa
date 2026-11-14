@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Titik Rasa - Temukan Titik Enakmu</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#FDFBF7',
+              100: '#F7F2EA',
+              200: '#EADBC8',
+              300: '#D6C3A8',
+              400: '#B89772',
+              500: '#8C6239',
+              600: '#5C3A21',
+              700: '#3D2413',
+              800: '#26170B',
+              900: '#140C05',
+            },
+            terracotta: {
+              DEFAULT: '#C86D51',
+              hover: '#B55B3F'
+            },
+            matcha: {
+              DEFAULT: '#7B8F71',
+              light: '#E8EDE5'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-serif { font-family: 'Playfair Display', serif; }
+  </style>
+</head>
+<body class="bg-brand-50 text-brand-800 antialiased selection:bg-brand-300 selection:text-brand-900">
+
+  <!-- Header / Navigation -->
+  <header class="sticky top-0 z-40 bg-brand-50/90 backdrop-blur-md border-b border-brand-200/60 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-11 h-11 rounded-2xl bg-brand-600 flex items-center justify-center text-white shadow-md shadow-brand-600/20 group-hover:bg-brand-700 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="font-serif text-2xl font-bold tracking-tight text-brand-700 block leading-tight">TITIK RASA</span>
+          <span class="text-[10px] tracking-widest text-brand-400 font-semibold uppercase block">Temukan Titik Enakmu</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav & Actions -->
+      <div class="hidden md:flex items-center gap-6">
+        <!-- Order Mode Toggle -->
+        <div class="bg-brand-100 p-1 rounded-full flex items-center border border-brand-200 text-xs font-medium">
+          <button onclick="setOrderMode('delivery')" id="mode-delivery" class="px-4 py-1.5 rounded-full transition-all bg-brand-600 text-white shadow-sm">Pesan Antar</button>
+          <button onclick="setOrderMode('pickup')" id="mode-pickup" class="px-4 py-1.5 rounded-full transition-all text-brand-700 hover:text-brand-900">Ambil di Tempat</button>
+        </div>
+
+        <!-- Cart Button -->
+        <button onclick="toggleCartDrawer(true)" class="relative bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-full font-medium shadow-md shadow-brand-600/20 flex items-center gap-2 transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+          <span>Keranjang</span>
+          <span id="cart-badge" class="absolute -top-1.5 -right-1.5 bg-terracotta text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold border-2 border-brand-50 hidden">0</span>
+        </button>
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <div class="flex items-center gap-3 md:hidden">
+        <button onclick="toggleCartDrawer(true)" class="relative p-2.5 rounded-xl bg-brand-100 text-brand-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+          <span id="cart-badge-mobile" class="absolute -top-1 -right-1 bg-terracotta text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-brand-50 hidden">0</span>
+        </button>
+        <button onclick="toggleMobileNav()" class="p-2.5 rounded-xl bg-brand-100 text-brand-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden pt-12 pb-16 md:py-24 bg-gradient-to-b from-brand-100/60 to-brand-50 border-b border-brand-200/40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div class="lg:col-span-7 text-center lg:text-left">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-200/70 text-brand-700 text-xs font-semibold tracking-wide uppercase mb-6">
+            <span class="w-2 h-2 rounded-full bg-terracotta animate-pulse"></span>
+            Freshly Brewed Every Day • Botol Steril Higienis
+          </div>
+          <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-brand-800 tracking-tight leading-[1.15] mb-6">
+            Temukan Titik Enakmu di Setiap <span class="text-terracotta italic">Tegukan</span>
+          </h1>
+          <p class="text-lg text-brand-600 max-w-2xl mx-auto lg:mx-0 mb-8 font-normal leading-relaxed">
+            P
