@@ -375,3 +375,8 @@ function showToast(msg) {
     toast.classList.add('translate-y-20', 'opacity-0');
   }, 3000);
 }
+// Tambahan fungsi mobile nav agar tidak error
+function toggleMobileNav() {
+  // Fungsi opsional untuk menu HP (bisa dikustomisasi jika ingin menampilkan menu dropdown)
+  toggleCartDrawer(true);
+}
