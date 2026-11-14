@@ -97,10 +97,10 @@
           <div class="relative w-full max-w-md">
             <div class="absolute -inset-1 rounded-3xl bg-gradient-to-tr from-brand-300 to-terracotta/30 blur-xl opacity-70 animate-float"></div>
             <div class="relative rounded-3xl bg-white p-4 shadow-2xl border border-brand-200/80">
-              <img src="assets/images/cookies-latte.jpg" alt="Titik Rasa Bottle" class="w-full h-80 object-cover rounded-2xl" onerror="this.src='https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=800&q=80'">
+              <img src="assets/images/cover.jpg" alt="Titik Rasa Bottle" class="w-full h-80 object-cover rounded-2xl" onerror="this.src='https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=800&q=80'">
               <div class="mt-4 p-3 bg-brand-50 rounded-2xl flex items-center justify-between">
                 <div>
-                  <h4 class="font-bold text-brand-800 text-sm">Cookies Latte (Best Seller)</h4>
+                  <h4 class="font-bold text-brand-800 text-sm">TITIK RASA Varian</h4>
                   <p class="text-xs text-brand-500">Tersedia 250ml & 150ml</p>
                 </div>
                 <span class="bg-terracotta text-white text-xs px-3 py-1.5 rounded-xl font-bold">Mulai 8K</span>
@@ -217,7 +217,7 @@
 
     const TOPPINGS = [
       { id: 'less-sugar', name: 'Less Sugar (Gula Lebih Sedikit)', price: 0 },
-      { id: 'extra-ice', name: 'Extra Es Batu (Terpisah)', price: 0 }
+      { id: 'extra-ice', name: 'Extra Es Batu (Terpisah)', price: 1000 }
     ];
 
     let cart = [];
@@ -225,6 +225,7 @@
     let activeCategory = 'all';
     let searchQuery = '';
     let appliedDiscount = 0;
+    let freeShipping = false; // Status gratis ongkos kirim
     let promoCodeName = '';
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -246,6 +247,7 @@
         btnDeliv.className = "px-4 py-1.5 rounded-full transition-all text-brand-700 hover:text-brand-900";
         showToast("Mode diubah ke: Ambil di Tempat");
       }
+      renderCartContent();
     }
 
     function formatRupiah(number) {
@@ -448,7 +450,8 @@
       const drawer = document.getElementById('cart-drawer');
       const subtotal = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
       const discountAmount = (subtotal * appliedDiscount);
-      const deliveryFee = currentOrderMode === 'delivery' ? 10000 : 0;
+      const baseDeliveryFee = currentOrderMode === 'delivery' ? 10000 : 0;
+      const deliveryFee = freeShipping ? 0 : baseDeliveryFee;
       const finalTotal = subtotal - discountAmount + deliveryFee;
 
       drawer.innerHTML = `
@@ -492,13 +495,19 @@
         ${cart.length > 0 ? `
           <div class="p-6 border-t border-brand-200 bg-brand-50 space-y-4">
             <div class="flex gap-2">
-              <input type="text" id="promo-input" placeholder="Kode Promo (coba: TITIKBARU)" value="${promoCodeName}" class="flex-1 px-4 py-2.5 rounded-xl bg-white border border-brand-200 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 uppercase">
+              <input type="text" id="promo-input" placeholder="Coba: TITIKBARU / BEBASONGKIR" value="${promoCodeName}" class="flex-1 px-4 py-2.5 rounded-xl bg-white border border-brand-200 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 uppercase">
               <button onclick="applyPromo()" class="bg-brand-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold hover:bg-brand-800 transition-all">Gunakan</button>
             </div>
             <div class="space-y-1.5 text-xs text-brand-600">
               <div class="flex justify-between"><span>Subtotal</span><span class="font-semibold text-brand-800">${formatRupiah(subtotal)}</span></div>
-              ${appliedDiscount > 0 ? `<div class="flex justify-between text-terracotta font-medium"><span>Diskon Promo</span><span>-${formatRupiah(subtotal * appliedDiscount)}</span></div>` : ''}
-              ${currentOrderMode === 'delivery' ? `<div class="flex justify-between"><span>Biaya Kirim (Estimasi)</span><span class="font-semibold text-brand-800">${formatRupiah(deliveryFee)}</span></div>` : ''}
+              ${appliedDiscount > 0 ? `<div class="flex justify-between text-terracotta font-medium"><span>Diskon Promo (${promoCodeName})</span><span>-${formatRupiah(subtotal * appliedDiscount)}</span></div>` : ''}
+              ${currentOrderMode === 'delivery' ? `
+                <div class="flex justify-between">
+                  <span>Biaya Kirim</span>
+                  <span class="font-semibold ${freeShipping ? 'line-through text-brand-400' : 'text-brand-800'}">${formatRupiah(baseDeliveryFee)}</span>
+                </div>
+                ${freeShipping ? `<div class="flex justify-between text-green-600 font-medium"><span>Gratis Ongkir (${promoCodeName})</span><span>Rp 0</span></div>` : ''}
+              ` : ''}
               <div class="flex justify-between text-base font-bold text-brand-800 pt-2 border-t border-brand-200"><span>Total Pembayaran</span><span class="text-brand-700">${formatRupiah(finalTotal)}</span></div>
             </div>
             <button onclick="checkoutWhatsApp()" class="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-600/20 transition-all text-center flex items-center justify-center gap-2">
@@ -522,10 +531,19 @@
     function applyPromo() {
       const code = document.getElementById('promo-input').value.trim().toUpperCase();
       if (code === 'TITIKBARU') {
-        appliedDiscount = 0.15; promoCodeName = code;
+        appliedDiscount = 0.15;
+        freeShipping = false;
+        promoCodeName = code;
         showToast("Promo berhasil digunakan! Diskon 15%");
+      } else if (code === 'BEBASONGKIR' || code === 'GRATISONGKIR') {
+        appliedDiscount = 0;
+        freeShipping = true;
+        promoCodeName = code;
+        showToast("Promo Gratis Ongkir Berhasil Digunakan! (Rp 0)");
       } else {
-        appliedDiscount = 0; promoCodeName = '';
+        appliedDiscount = 0;
+        freeShipping = false;
+        promoCodeName = '';
         showToast("Kode promo tidak valid");
       }
       renderCartContent();
@@ -535,15 +553,17 @@
       if (cart.length === 0) return;
       const subtotal = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
       const discountAmount = subtotal * appliedDiscount;
-      const deliveryFee = currentOrderMode === 'delivery' ? 10000 : 0;
+      const baseDeliveryFee = currentOrderMode === 'delivery' ? 10000 : 0;
+      const deliveryFee = freeShipping ? 0 : baseDeliveryFee;
       const finalTotal = subtotal - discountAmount + deliveryFee;
       let cleanTotal = formatRupiah(finalTotal);
       let waMessage = `Halo Titik Rasa, saya ingin memesan:\n\n` +
         `*Metode:* ${currentOrderMode === 'delivery' ? 'Pesan Antar' : 'Ambil di Tempat'}\n\n` +
         cart.map((item, idx) => `${idx + 1}. ${item.name} (x${item.quantity}) - ${formatRupiah(item.price * item.quantity)}`).join('\n') +
+        (freeShipping ? `\n\n*Promo:* Gratis Ongkir (${promoCodeName})` : '') +
         `\n\n*Total Bayar:* ${cleanTotal}\n\nMohon diproses ya kak. Terima kasih!`;
       const encoded = encodeURIComponent(waMessage);
-      const phone = "628561366948";
+      const phone = "628561366948"; // Ganti dengan nomor WhatsApp Anda
       window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
     }
 

@@ -100,7 +100,7 @@
               <img src="assets/images/cover.jpg" alt="Titik Rasa Bottle" class="w-full h-80 object-cover rounded-2xl" onerror="this.src='https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=800&q=80'">
               <div class="mt-4 p-3 bg-brand-50 rounded-2xl flex items-center justify-between">
                 <div>
-                  <h4 class="font-bold text-brand-800 text-sm">TITIK RASA Varian</h4>
+                  <h4 class="font-bold text-brand-800 text-sm">Varian TITIK RASA</h4>
                   <p class="text-xs text-brand-500">Tersedia 250ml & 150ml</p>
                 </div>
                 <span class="bg-terracotta text-white text-xs px-3 py-1.5 rounded-xl font-bold">Mulai 8K</span>
@@ -224,9 +224,11 @@
     let currentOrderMode = 'delivery';
     let activeCategory = 'all';
     let searchQuery = '';
-    let appliedDiscount = 0;
-    let freeShipping = false; // Status gratis ongkos kirim
-    let promoCodeName = '';
+    
+    // Status promo terpisah agar bisa digabung
+    let titikBaruActive = false;
+    let freeShipping = false;
+    let promoInputText = '';
 
     document.addEventListener('DOMContentLoaded', () => {
       renderProducts();
@@ -367,8 +369,11 @@
             <div class="space-y-2">
               ${TOPPINGS.map(t => `
                 <label class="flex items-center justify-between p-3 rounded-xl bg-brand-50 border border-brand-200 cursor-pointer">
-                  <span class="text-sm font-medium text-brand-800">${t.name}</span>
-                  <input type="checkbox" value="${t.name}" class="modal-topping accent-brand-600 w-4 h-4 rounded">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-brand-800">${t.name}</span>
+                    ${t.price > 0 ? `<span class="text-xs font-bold text-terracotta">(+${formatRupiah(t.price)})</span>` : ''}
+                  </div>
+                  <input type="checkbox" value="${t.name}" data-price="${t.price}" class="modal-topping accent-brand-600 w-4 h-4 rounded" onchange="updateModalPrice()">
                 </label>
               `).join('')}
             </div>
@@ -393,7 +398,13 @@
     function updateModalPrice() {
       const item = window.currentModalItem;
       const selectedSize = document.querySelector('input[name="modal-size"]:checked').value;
-      const price = item.prices[selectedSize];
+      let price = item.prices[selectedSize];
+      
+      const selectedToppings = document.querySelectorAll('.modal-topping:checked');
+      selectedToppings.forEach(el => {
+        price += parseInt(el.getAttribute('data-price')) || 0;
+      });
+
       document.getElementById('modal-total-price').innerText = formatRupiah(price);
     }
 
@@ -408,8 +419,15 @@
     function addToCartFromModal(itemId) {
       const item = MENU_PRODUCTS.find(p => p.id === itemId);
       const selectedSize = document.querySelector('input[name="modal-size"]:checked').value;
-      const price = item.prices[selectedSize];
-      const selectedToppings = Array.from(document.querySelectorAll('.modal-topping:checked')).map(el => el.value);
+      let price = item.prices[selectedSize];
+      
+      const selectedToppingsElements = document.querySelectorAll('.modal-topping:checked');
+      const selectedToppings = [];
+      selectedToppingsElements.forEach(el => {
+        selectedToppings.push(el.value);
+        price += parseInt(el.getAttribute('data-price')) || 0;
+      });
+
       const cartItem = {
         cartId: Date.now() + Math.random(), id: item.id,
         name: `${item.name} (${selectedSize} ml)`, price: price,
@@ -446,10 +464,31 @@
       }
     }
 
+    function getPromoDiscount(subtotal) {
+      if (titikBaruActive) {
+        let units150 = [];
+        cart.forEach(i => {
+          if (i.size === '150') {
+            for (let q = 0; q < i.quantity; q++) {
+              units150.push(i.price);
+            }
+          }
+        });
+        units150.sort((a, b) => a - b);
+        let freeCount = Math.floor(units150.length / 6); // Beli 5 gratis 1 (total 6 unit)
+        let discount = 0;
+        for (let f = 0; f < freeCount; f++) {
+          discount += units150[f];
+        }
+        return discount;
+      }
+      return 0;
+    }
+
     function renderCartContent() {
       const drawer = document.getElementById('cart-drawer');
       const subtotal = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-      const discountAmount = (subtotal * appliedDiscount);
+      const discountAmount = getPromoDiscount(subtotal);
       const baseDeliveryFee = currentOrderMode === 'delivery' ? 10000 : 0;
       const deliveryFee = freeShipping ? 0 : baseDeliveryFee;
       const finalTotal = subtotal - discountAmount + deliveryFee;
@@ -495,18 +534,18 @@
         ${cart.length > 0 ? `
           <div class="p-6 border-t border-brand-200 bg-brand-50 space-y-4">
             <div class="flex gap-2">
-              <input type="text" id="promo-input" placeholder="Coba: TITIKBARU / BEBASONGKIR" value="${promoCodeName}" class="flex-1 px-4 py-2.5 rounded-xl bg-white border border-brand-200 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 uppercase">
+              <input type="text" id="promo-input" placeholder="Cth: TITIKBARU / BEBASONGKIR" value="${promoInputText}" class="flex-1 px-4 py-2.5 rounded-xl bg-white border border-brand-200 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 uppercase">
               <button onclick="applyPromo()" class="bg-brand-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold hover:bg-brand-800 transition-all">Gunakan</button>
             </div>
             <div class="space-y-1.5 text-xs text-brand-600">
               <div class="flex justify-between"><span>Subtotal</span><span class="font-semibold text-brand-800">${formatRupiah(subtotal)}</span></div>
-              ${appliedDiscount > 0 ? `<div class="flex justify-between text-terracotta font-medium"><span>Diskon Promo (${promoCodeName})</span><span>-${formatRupiah(subtotal * appliedDiscount)}</span></div>` : ''}
+              ${discountAmount > 0 ? `<div class="flex justify-between text-terracotta font-medium"><span>Promo Beli 5 Gratis 1</span><span>-${formatRupiah(discountAmount)}</span></div>` : ''}
               ${currentOrderMode === 'delivery' ? `
                 <div class="flex justify-between">
                   <span>Biaya Kirim</span>
                   <span class="font-semibold ${freeShipping ? 'line-through text-brand-400' : 'text-brand-800'}">${formatRupiah(baseDeliveryFee)}</span>
                 </div>
-                ${freeShipping ? `<div class="flex justify-between text-green-600 font-medium"><span>Gratis Ongkir (${promoCodeName})</span><span>Rp 0</span></div>` : ''}
+                ${freeShipping ? `<div class="flex justify-between text-green-600 font-medium"><span>Bebas Ongkir</span><span>Rp 0</span></div>` : ''}
               ` : ''}
               <div class="flex justify-between text-base font-bold text-brand-800 pt-2 border-t border-brand-200"><span>Total Pembayaran</span><span class="text-brand-700">${formatRupiah(finalTotal)}</span></div>
             </div>
@@ -529,39 +568,62 @@
     }
 
     function applyPromo() {
-      const code = document.getElementById('promo-input').value.trim().toUpperCase();
-      if (code === 'TITIKBARU') {
-        appliedDiscount = 0.15;
-        freeShipping = false;
-        promoCodeName = code;
-        showToast("Promo berhasil digunakan! Diskon 15%");
-      } else if (code === 'BEBASONGKIR' || code === 'GRATISONGKIR') {
-        appliedDiscount = 0;
-        freeShipping = true;
-        promoCodeName = code;
-        showToast("Promo Gratis Ongkir Berhasil Digunakan! (Rp 0)");
+      const codeText = document.getElementById('promo-input').value.trim().toUpperCase();
+      promoInputText = codeText;
+      
+      const hasTitikBaru = codeText.includes('TITIKBARU');
+      const hasBebasOngkir = codeText.includes('BEBASONGKIR') || codeText.includes('GRATISONGKIR');
+      
+      let feedback = [];
+
+      if (hasTitikBaru) {
+        let total250 = cart.filter(i => i.size === '250').reduce((sum, i) => sum + i.quantity, 0);
+        if (total250 < 6) {
+          titikBaruActive = false;
+          feedback.push("Minimal 6 botol 250ml untuk promo TITIKBARU");
+        } else {
+          titikBaruActive = true;
+          feedback.push("Promo Beli 5 Gratis 1 Aktif!");
+        }
       } else {
-        appliedDiscount = 0;
-        freeShipping = false;
-        promoCodeName = '';
-        showToast("Kode promo tidak valid");
+        titikBaruActive = false;
       }
+
+      if (hasBebasOngkir) {
+        freeShipping = true;
+        feedback.push("Bebas Ongkir Aktif!");
+      } else {
+        freeShipping = false;
+      }
+
+      if (feedback.length === 0) {
+        showToast("Kode promo tidak valid");
+      } else {
+        showToast(feedback.join(" & "));
+      }
+
       renderCartContent();
     }
 
     function checkoutWhatsApp() {
       if (cart.length === 0) return;
       const subtotal = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-      const discountAmount = subtotal * appliedDiscount;
+      const discountAmount = getPromoDiscount(subtotal);
       const baseDeliveryFee = currentOrderMode === 'delivery' ? 10000 : 0;
       const deliveryFee = freeShipping ? 0 : baseDeliveryFee;
       const finalTotal = subtotal - discountAmount + deliveryFee;
       let cleanTotal = formatRupiah(finalTotal);
+      
+      let promoSummary = [];
+      if (titikBaruActive && discountAmount > 0) promoSummary.push(`Beli 5 Gratis 1 (-${formatRupiah(discountAmount)})`);
+      if (freeShipping) promoSummary.push(`Bebas Ongkir (Rp 0)`);
+
       let waMessage = `Halo Titik Rasa, saya ingin memesan:\n\n` +
         `*Metode:* ${currentOrderMode === 'delivery' ? 'Pesan Antar' : 'Ambil di Tempat'}\n\n` +
         cart.map((item, idx) => `${idx + 1}. ${item.name} (x${item.quantity}) - ${formatRupiah(item.price * item.quantity)}`).join('\n') +
-        (freeShipping ? `\n\n*Promo:* Gratis Ongkir (${promoCodeName})` : '') +
+        (promoSummary.length > 0 ? `\n\n*Promo Digunakan:* ${promoSummary.join(', ')}` : '') +
         `\n\n*Total Bayar:* ${cleanTotal}\n\nMohon diproses ya kak. Terima kasih!`;
+      
       const encoded = encodeURIComponent(waMessage);
       const phone = "628561366948"; // Ganti dengan nomor WhatsApp Anda
       window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
