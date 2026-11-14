@@ -284,7 +284,8 @@ function renderCartContent() {
         <div class="flex gap-4 p-4 rounded-2xl bg-brand-50 border border-brand-200 items-center">
           <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover" onerror="this.src='https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=200&q=80'">
           <div class="flex-1">
-            <h4 class="font-bold text-sm text-brand-800">${item.name}</h4>${item.toppings.length > 0 ? `<p class="text-[11px] text-brand-500">${item.toppings.join(', ')}</p>` : ''}
+            <h4 class="font-bold text-sm text-brand-800">${item.name}</h4>
+            ${item.toppings.length > 0 ? `<p class="text-[11px] text-brand-500">${item.toppings.join(', ')}</p>` : ''}
             <span class="font-bold text-sm text-brand-700 block mt-1">${formatRupiah(item.price)}</span>
           </div>
           <div class="flex items-center gap-2 bg-white rounded-xl border border-brand-200 p-1">
@@ -304,7 +305,8 @@ function renderCartContent() {
         </div>
 
         <div class="space-y-1.5 text-xs text-brand-600">
-          <div class="flex justify-between"><span>Subtotal</span><span class="font-semibold text-brand-800">${formatRupiah(subtotal)}</span></div>${appliedDiscount > 0 ? `<div class="flex justify-between text-terracotta font-medium"><span>Diskon Promo</span><span>-${formatRupiah(subtotal * appliedDiscount)}</span></div>` : ''}
+          <div class="flex justify-between"><span>Subtotal</span><span class="font-semibold text-brand-800">${formatRupiah(subtotal)}</span></div>
+          ${appliedDiscount > 0 ? `<div class="flex justify-between text-terracotta font-medium"><span>Diskon Promo</span><span>-${formatRupiah(subtotal * appliedDiscount)}</span></div>` : ''}
           ${currentOrderMode === 'delivery' ? `<div class="flex justify-between"><span>Biaya Kirim (Estimasi)</span><span class="font-semibold text-brand-800">${formatRupiah(deliveryFee)}</span></div>` : ''}
           <div class="flex justify-between text-base font-bold text-brand-800 pt-2 border-t border-brand-200"><span>Total Pembayaran</span><span class="text-brand-700">${formatRupiah(finalTotal)}</span></div>
         </div>
@@ -333,4 +335,43 @@ function applyPromo() {
   const code = document.getElementById('promo-input').value.trim().toUpperCase();
   if (code === 'TITIKBARU') {
     appliedDiscount = 0.15;
-    promoCodeName = code
+    promoCodeName = code;
+    showToast("Promo berhasil digunakan! Diskon 15%");
+  } else {
+    appliedDiscount = 0;
+    promoCodeName = '';
+    showToast("Kode promo tidak valid");
+  }
+  renderCartContent();
+}
+
+function checkoutWhatsApp() {
+  if (cart.length === 0) return;
+  
+  const subtotal = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+  const discountAmount = subtotal * appliedDiscount;
+  const deliveryFee = currentOrderMode === 'delivery' ? 10000 : 0;
+  const finalTotal = subtotal - discountAmount + deliveryFee;
+
+  let cleanTotal = formatRupiah(finalTotal);
+  let waMessage = `Halo Titik Rasa, saya ingin memesan:\n\n` +
+    `*Metode:* ${currentOrderMode === 'delivery' ? 'Pesan Antar' : 'Ambil di Tempat'}\n\n` +
+    cart.map((item, idx) => `${idx + 1}. ${item.name} (x${item.quantity}) - ${formatRupiah(item.price * item.quantity)}`).join('\n') +
+    `\n\n*Total Bayar:* ${cleanTotal}\n\nMohon diproses ya kak. Terima kasih!`;
+
+  const encoded = encodeURIComponent(waMessage);
+  const phone = "628123456789"; // Ganti dengan nomor WhatsApp Anda
+  window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  const msgEl = document.getElementById('toast-message');
+  msgEl.innerText = msg;
+  toast.classList.remove('translate-y-20', 'opacity-0');
+  toast.classList.add('translate-y-0', 'opacity-100');
+  setTimeout(() => {
+    toast.classList.remove('translate-y-0', 'opacity-100');
+    toast.classList.add('translate-y-20', 'opacity-0');
+  }, 3000);
+}
