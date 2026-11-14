@@ -97,10 +97,10 @@
           <div class="relative w-full max-w-md">
             <div class="absolute -inset-1 rounded-3xl bg-gradient-to-tr from-brand-300 to-terracotta/30 blur-xl opacity-70 animate-float"></div>
             <div class="relative rounded-3xl bg-white p-4 shadow-2xl border border-brand-200/80">
-              <img src="assets/images/cover.jpg" alt="Titik Rasa Bottle" class="w-full h-80 object-cover rounded-2xl" onerror="this.src='https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=800&q=80'">
+              <img src="assets/images/cookies-latte.jpg" alt="Titik Rasa Bottle" class="w-full h-80 object-cover rounded-2xl" onerror="this.src='https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=800&q=80'">
               <div class="mt-4 p-3 bg-brand-50 rounded-2xl flex items-center justify-between">
                 <div>
-                  <h4 class="font-bold text-brand-800 text-sm">Varian TITIK RASA</h4>
+                  <h4 class="font-bold text-brand-800 text-sm">Cookies Latte (Best Seller)</h4>
                   <p class="text-xs text-brand-500">Tersedia 250ml & 150ml</p>
                 </div>
                 <span class="bg-terracotta text-white text-xs px-3 py-1.5 rounded-xl font-bold">Mulai 8K</span>
@@ -144,6 +144,7 @@
                 <th class="py-4 px-6">Varian Rasa</th>
                 <th class="py-4 px-6 text-center">Botol 250 ml</th>
                 <th class="py-4 px-6 text-center">Botol 150 ml</th>
+                <th class="py-4 px-6 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody id="pricelist-table-body" class="divide-y divide-brand-100 text-sm"></tbody>
@@ -224,7 +225,6 @@
     let activeCategory = 'all';
     let searchQuery = '';
     
-    // Status promo terpisah agar bisa digabung
     let titikBaruActive = false;
     let freeShipping = false;
     let promoInputText = '';
@@ -465,19 +465,17 @@
 
     function getPromoDiscount(subtotal) {
       if (titikBaruActive) {
-        let units150 = [];
+        let allUnits = [];
         cart.forEach(i => {
-          if (i.size === '150') {
-            for (let q = 0; q < i.quantity; q++) {
-              units150.push(i.price);
-            }
+          for (let q = 0; q < i.quantity; q++) {
+            allUnits.push(i.price);
           }
         });
-        units150.sort((a, b) => a - b);
-        let freeCount = Math.floor(units150.length / 6); // Beli 5 gratis 1 (total 6 unit)
+        allUnits.sort((a, b) => a - b);
+        let freeCount = Math.floor(allUnits.length / 6); // Setiap pembelian 6 botol, gratis 1 botol termurah
         let discount = 0;
         for (let f = 0; f < freeCount; f++) {
-          discount += units150[f];
+          discount += allUnits[f];
         }
         return discount;
       }
@@ -576,10 +574,10 @@
       let feedback = [];
 
       if (hasTitikBaru) {
-        let total250 = cart.filter(i => i.size === '250').reduce((sum, i) => sum + i.quantity, 0);
-        if (total250 < 6) {
+        let totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
+        if (totalItems < 6) {
           titikBaruActive = false;
-          feedback.push("Minimal 6 botol 250ml untuk promo TITIKBARU");
+          feedback.push("Minimal 6 botol di keranjang untuk promo TITIKBARU");
         } else {
           titikBaruActive = true;
           feedback.push("Promo Beli 5 Gratis 1 Aktif!");
@@ -624,7 +622,7 @@
         `\n\n*Total Bayar:* ${cleanTotal}\n\nMohon diproses ya kak. Terima kasih!`;
       
       const encoded = encodeURIComponent(waMessage);
-      const phone = "628561366948"; // Ganti dengan nomor WhatsApp Anda
+      const phone = "628123456789"; // Ganti dengan nomor WhatsApp Anda
       window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
     }
 
