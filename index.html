@@ -144,7 +144,7 @@
                 <th class="py-4 px-6">Varian Rasa</th>
                 <th class="py-4 px-6 text-center">Botol 250 ml</th>
                 <th class="py-4 px-6 text-center">Botol 150 ml</th>
-                <th class="py-4 px-6 text-right">Aksi</th>
+                <th class="py-4 px-6 text-right">Silahkan</th>
               </tr>
             </thead>
             <tbody id="pricelist-table-body" class="divide-y divide-brand-100 text-sm"></tbody>
@@ -161,7 +161,7 @@
         <h3 class="font-serif text-xl font-bold text-white mb-1">TITIK RASA</h3>
         <p class="text-xs text-brand-300">Temukan Titik Enakmu • Dibuat dengan bahan pilihan berkualitas.</p>
       </div>
-      <p class="text-xs text-brand-400">© 2026 titikrasa.id. Seluruh hak cipta dilindungi.</p>
+      <p class="text-xs text-brand-400">© 2026 titikrasa.web.id. Seluruh hak cipta dilindungi.</p>
     </div>
   </footer>
 
@@ -225,9 +225,10 @@
     let activeCategory = 'all';
     let searchQuery = '';
     
-    let titikBaruActive = false;
+    let bundleActive = false;
     let freeShipping = false;
     let promoInputText = '';
+    let customerName = '';
 
     document.addEventListener('DOMContentLoaded', () => {
       renderProducts();
@@ -464,20 +465,24 @@
     }
 
     function getPromoDiscount(subtotal) {
-      if (titikBaruActive) {
-        let allUnits = [];
+      if (bundleActive) {
+        let eligible250Count = 0;
+        let eligible250Subtotal = 0;
+        
         cart.forEach(i => {
-          for (let q = 0; q < i.quantity; q++) {
-            allUnits.push(i.price);
+          // Hanya ukuran 250ml dan bukan cookies-latte atau kopi-aren
+          if (i.size === '250' && i.id !== 'cookies-latte' && i.id !== 'kopi-aren') {
+            eligible250Count += i.quantity;
+            eligible250Subtotal += (i.price * i.quantity);
           }
         });
-        allUnits.sort((a, b) => a - b);
-        let freeCount = Math.floor(allUnits.length / 6); // Setiap pembelian 6 botol, gratis 1 botol termurah
-        let discount = 0;
-        for (let f = 0; f < freeCount; f++) {
-          discount += allUnits[f];
+
+        // Jika memenuhi minimal 5 botol yang valid untuk bundling
+        if (eligible250Count >= 5) {
+          // Harga normal untuk 5 botol tersebut di-set menjadi total 55.000
+          let discount = eligible250Subtotal - 55000;
+          return discount > 0 ? discount : 0;
         }
-        return discount;
       }
       return 0;
     }
@@ -530,13 +535,17 @@
         </div>
         ${cart.length > 0 ? `
           <div class="p-6 border-t border-brand-200 bg-brand-50 space-y-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-brand-600 mb-1">Nama Pemesan</label>
+              <input type="text" id="customer-name-input" placeholder="Masukkan nama Anda..." value="${customerName}" oninput="customerName = this.value" class="w-full px-4 py-2.5 rounded-xl bg-white border border-brand-200 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
             <div class="flex gap-2">
               <input type="text" id="promo-input" placeholder="Cth: TITIKBARU / BEBASONGKIR" value="${promoInputText}" class="flex-1 px-4 py-2.5 rounded-xl bg-white border border-brand-200 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 uppercase">
               <button onclick="applyPromo()" class="bg-brand-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold hover:bg-brand-800 transition-all">Gunakan</button>
             </div>
             <div class="space-y-1.5 text-xs text-brand-600">
               <div class="flex justify-between"><span>Subtotal</span><span class="font-semibold text-brand-800">${formatRupiah(subtotal)}</span></div>
-              ${discountAmount > 0 ? `<div class="flex justify-between text-terracotta font-medium"><span>Promo Beli 5 Gratis 1</span><span>-${formatRupiah(discountAmount)}</span></div>` : ''}
+              ${discountAmount > 0 ? `<div class="flex justify-between text-terracotta font-medium"><span>Paket Bundling (5 Botol 250ml)</span><span>-${formatRupiah(discountAmount)}</span></div>` : ''}
               ${currentOrderMode === 'delivery' ? `
                 <div class="flex justify-between">
                   <span>Biaya Kirim</span>
@@ -574,16 +583,22 @@
       let feedback = [];
 
       if (hasTitikBaru) {
-        let totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
-        if (totalItems < 6) {
-          titikBaruActive = false;
-          feedback.push("Minimal 6 botol di keranjang untuk promo TITIKBARU");
+        let valid250Count = 0;
+        cart.forEach(i => {
+          if (i.size === '250' && i.id !== 'cookies-latte' && i.id !== 'kopi-aren') {
+            valid250Count += i.quantity;
+          }
+        });
+
+        if (valid250Count < 5) {
+          bundleActive = false;
+          feedback.push("Minimal 5 botol 250ml (selain Cookies Latte & Kopi Aren) untuk promo TITIKBARU");
         } else {
-          titikBaruActive = true;
-          feedback.push("Promo Beli 5 Gratis 1 Aktif!");
+          bundleActive = true;
+          feedback.push("Promo Paket Bundling 55k Aktif!");
         }
       } else {
-        titikBaruActive = false;
+        bundleActive = false;
       }
 
       if (hasBebasOngkir) {
@@ -604,6 +619,16 @@
 
     function checkoutWhatsApp() {
       if (cart.length === 0) return;
+      
+      const nameInput = document.getElementById('customer-name-input');
+      if (nameInput) customerName = nameInput.value.trim();
+
+      if (!customerName) {
+        showToast("Mohon masukkan nama pemesan terlebih dahulu!");
+        if (nameInput) nameInput.focus();
+        return;
+      }
+
       const subtotal = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
       const discountAmount = getPromoDiscount(subtotal);
       const baseDeliveryFee = currentOrderMode === 'delivery' ? 10000 : 0;
@@ -612,10 +637,11 @@
       let cleanTotal = formatRupiah(finalTotal);
       
       let promoSummary = [];
-      if (titikBaruActive && discountAmount > 0) promoSummary.push(`Beli 5 Gratis 1 (-${formatRupiah(discountAmount)})`);
+      if (bundleActive && discountAmount > 0) promoSummary.push(`Paket Bundling 5 Botol 250ml (-${formatRupiah(discountAmount)})`);
       if (freeShipping) promoSummary.push(`Bebas Ongkir (Rp 0)`);
 
       let waMessage = `Halo Titik Rasa, saya ingin memesan:\n\n` +
+        `*Nama Pemesan:* ${customerName}\n` +
         `*Metode:* ${currentOrderMode === 'delivery' ? 'Pesan Antar' : 'Ambil di Tempat'}\n\n` +
         cart.map((item, idx) => `${idx + 1}. ${item.name} (x${item.quantity}) - ${formatRupiah(item.price * item.quantity)}`).join('\n') +
         (promoSummary.length > 0 ? `\n\n*Promo Digunakan:* ${promoSummary.join(', ')}` : '') +
