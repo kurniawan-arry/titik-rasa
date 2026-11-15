@@ -4,7 +4,7 @@ Website e-commerce katalog minuman botol premium **Titik Rasa**. Dibangun menggu
 
 ![Titik Rasa Banner](assets/images/cover.jpg)
 
-## ✨ Fitur Utama
+## ✨ Fitur Utama Website
 
 - **Katalog Menu Interaktif:** Filter produk berdasarkan kategori (Kopi Series, Teh & Susu) serta fitur pencarian cepat (*live search*).
 - **Kustomisasi Pesanan (Modal):** Pelanggan dapat memilih ukuran botol (**250 ml** atau **150 ml**) serta opsi tambahan (*Toppings* seperti *Less Sugar* atau *Extra Es Batu* dengan penyesuaian harga otomatis).
