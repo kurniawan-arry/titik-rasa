@@ -2,7 +2,7 @@
 
 Website e-commerce katalog minuman botol premium **Titik Rasa**. Dibangun menggunakan arsitektur web statis modern (HTML5, Tailwind CSS, dan Vanilla JavaScript) tanpa memerlukan *backend database* yang rumit, sehingga sangat ringan, cepat, dan mudah di-hosting.
 
-![Titik Rasa Banner](assets/images/cookies-latte.jpg)
+![Titik Rasa Banner](assets/images/cover.jpg)
 
 ## ✨ Fitur Utama
 
